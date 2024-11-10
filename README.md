@@ -2,7 +2,11 @@
   <img src="https://raw.githubusercontent.com/tschuerti/icsuntis/refs/heads/main/logo.png" />
 </p>
 
+##
+
 ICSUntis is a simple JavaScript server that generates an ICS file from your WebUntis substitution plan. It is designed to be run on a server and can be accessed via a simple HTTP GET request.
+
+
 
 ## Usage
 
@@ -31,4 +35,5 @@ Here is an example of a GET request:
 http://<your-server-adress>:3000?server=<server>.webuntis.com&school=<school>&username=<username>&password=<password>
 ```
 
+<br>
 <h3 align="center">Have fun using ICSUntis!🙂</p>
