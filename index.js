@@ -6,11 +6,15 @@ import { WebUntis } from 'webuntis';
 const app = express();
 const port = 3000;
 
-app.get('/ics', async (req, res) => {
+app.get('/', async (req, res) => {
     try {
         // Lese Verbindungsinformationen aus den URL-Parametern
         const { server, school, username, password } = req.query;
         
+        if (!server & !school & !username & !password) {
+            return res.redirect('https://github.com/tschuerti/icsuntis');
+        }
+
         if (!server || !school || !username || !password) {
             return res.status(400).send('Fehlende Verbindungsdaten: Bitte server, school, username und password angeben.');
         }
