@@ -43,7 +43,7 @@ To generate an ICS file, you need to make a GET request to the ICSUntis server w
 Here is an example of a GET request:
 
 ```http
-http://<your-server-adress>:3000?server=<server>.webuntis.com&school=<school>&username=<username>&password=<password>
+http://<your-server-adress>:3979?server=<server>.webuntis.com&school=<school>&username=<username>&password=<password>
 ```
 
 <br>
