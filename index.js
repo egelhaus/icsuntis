@@ -3,7 +3,7 @@ import { createEvents } from 'ics';
 import { WebUntis } from 'webuntis';
 
 const app = express();
-const port = 3000;
+const port = 3979;
 
 app.get('/', async (req, res) => {
     try {
