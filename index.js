@@ -7,7 +7,6 @@ const port = 3979;
 
 app.get('/', async (req, res) => {
     try {
-        // Read connection information from the URL parameters
         const { server, school, username, password } = req.query;
         
         if (!server & !school & !username & !password) {
@@ -18,12 +17,9 @@ app.get('/', async (req, res) => {
             return res.status(400).send('Missing connection data: Please enter server, school, username and password.');
         }
 
-        // Create a new instance of WebUntis with the dynamic data
         const untis = new WebUntis(school, username, password, server);
-
         await untis.login();
 
-        // Calculate the start date (two months back) and end date (two months forwards)
         const startDate = new Date();
         startDate.setMonth(startDate.getMonth() - 2);
         const endDate = new Date();
@@ -31,9 +27,8 @@ app.get('/', async (req, res) => {
 
         const timetable = await untis.getOwnTimetableForRange(startDate, endDate);
 
-        // Structure for .ics events
         const events = timetable
-            .filter(lesson => lesson.code !== 'cancelled')  // Filter for cancelled hours
+            .filter(lesson => lesson.code !== 'cancelled')
             .map(lesson => {
                 const dateStr = lesson.date.toString();
                 const year = parseInt(dateStr.slice(0, 4));
@@ -66,20 +61,25 @@ app.get('/', async (req, res) => {
             const currentEvent = events[i];
             const nextEvent = events[i + 1];
 
-            if (nextEvent && currentEvent.title === nextEvent.title && currentEvent.location === nextEvent.location && currentEvent.description === nextEvent.description) {
-                // Merge events
+            if (
+                nextEvent &&
+                currentEvent.title === nextEvent.title &&
+                currentEvent.location === nextEvent.location &&
+                currentEvent.description === nextEvent.description &&
+                currentEvent.start[0] === nextEvent.start[0] && // Same year
+                currentEvent.start[1] === nextEvent.start[1] && // Same month
+                currentEvent.start[2] === nextEvent.start[2] // Same day
+            ) {
                 mergedEvents.push({
                     ...currentEvent,
                     end: nextEvent.end
                 });
                 i++; // Skip the next event
             } else {
-                // Keep the event as is
                 mergedEvents.push(currentEvent);
             }
         }
 
-        // Create the .ics file
         createEvents(mergedEvents, (error, value) => {
             if (error) {
                 console.error(error);
@@ -87,7 +87,6 @@ app.get('/', async (req, res) => {
                 return;
             }
 
-            // Provide .ics file
             res.setHeader('Content-Disposition', 'attachment; filename="timetable.ics"');
             res.setHeader('Content-Type', 'text/calendar');
             res.send(value);
