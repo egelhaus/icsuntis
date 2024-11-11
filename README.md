@@ -8,16 +8,16 @@ ICSUntis is a simple JavaScript server that generates an ICS file from your WebU
 
 
 
-## Preinformation: Official solution
+## Official solution
 
-WebUntis offers an official solution to subscribe to your timetable via ics, but not every school has enabled it.
+WebUntis offers an official solution to subscribe to your timetable via ICS, but not every school has enabled it.
 
-Check if your school does:
+To check if your school has enabled this feature, visit the following link:
 ```http
 https://help.untis.at/hc/de/articles/360014979580-Wie-funktioniert-das-iCal-Kalender-Abonnement-in-WebUntis
 ```
 
-If your school disabled this function, use my script🙂
+If your school has disabled this function, use my script 🙂
 
 ## Usage
 

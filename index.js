@@ -1,4 +1,3 @@
-import e from 'express';
 import express from 'express';
 import { createEvents } from 'ics';
 import { WebUntis } from 'webuntis';
@@ -8,7 +7,7 @@ const port = 3000;
 
 app.get('/', async (req, res) => {
     try {
-        // Lese Verbindungsinformationen aus den URL-Parametern
+        // Read connection information from the URL parameters
         const { server, school, username, password } = req.query;
         
         if (!server & !school & !username & !password) {
@@ -16,15 +15,15 @@ app.get('/', async (req, res) => {
         }
 
         if (!server || !school || !username || !password) {
-            return res.status(400).send('Fehlende Verbindungsdaten: Bitte server, school, username und password angeben.');
+            return res.status(400).send('Missing connection data: Please enter server, school, username and password.');
         }
 
-        // Erstelle eine neue Instanz von WebUntis mit den dynamischen Daten
+        // Create a new instance of WebUntis with the dynamic data
         const untis = new WebUntis(school, username, password, server);
 
         await untis.login();
 
-        // Berechne das Startdatum (zwei Monate zurück) und Enddatum (zwei Monate vorwärts)
+        // Calculate the start date (two months back) and end date (two months forwards)
         const startDate = new Date();
         startDate.setMonth(startDate.getMonth() - 2);
         const endDate = new Date();
@@ -32,9 +31,9 @@ app.get('/', async (req, res) => {
 
         const timetable = await untis.getOwnTimetableForRange(startDate, endDate);
 
-        // Struktur für .ics Events
+        // Structure for .ics events
         const events = timetable
-            .filter(lesson => lesson.code !== 'cancelled')  // Filter für entfallene Stunden
+            .filter(lesson => lesson.code !== 'cancelled')  // Filter for cancelled hours
             .map(lesson => {
                 const dateStr = lesson.date.toString();
                 const year = parseInt(dateStr.slice(0, 4));
@@ -47,11 +46,11 @@ app.get('/', async (req, res) => {
                 const endMinute = lesson.endTime % 100;
 
                 const subjects = lesson.su.map(subject => subject.longname).join(', ');
-                const rooms = lesson.ro ? lesson.ro.map(room => room.name).join(', ') : 'Kein Raum angegeben';
-                const teachers = lesson.te ? lesson.te.map(teacher => teacher.longname).join(', ') : 'Kein Lehrer angegeben';
+                const rooms = lesson.ro ? lesson.ro.map(room => room.name).join(', ') : 'No room specified';
+                const teachers = lesson.te ? lesson.te.map(teacher => teacher.longname).join(', ') : 'No teacher specified';
 
                 const inf = lesson.info ? `\n\nInfo: ${lesson.info || ''}` : '';
-                const fullinfo = `Lehrer: ${teachers}${inf}`;
+                const fullinfo = `Teacher: ${teachers}${inf}`;
 
                 return {
                     start: [year, month, day, startHour, startMinute],
@@ -62,25 +61,43 @@ app.get('/', async (req, res) => {
                 };
             });
 
-        // Erstellen der .ics-Datei
-        createEvents(events, (error, value) => {
+        const mergedEvents = [];
+        for (let i = 0; i < events.length; i++) {
+            const currentEvent = events[i];
+            const nextEvent = events[i + 1];
+
+            if (nextEvent && currentEvent.title === nextEvent.title && currentEvent.location === nextEvent.location && currentEvent.description === nextEvent.description) {
+                // Merge events
+                mergedEvents.push({
+                    ...currentEvent,
+                    end: nextEvent.end
+                });
+                i++; // Skip the next event
+            } else {
+                // Keep the event as is
+                mergedEvents.push(currentEvent);
+            }
+        }
+
+        // Create the .ics file
+        createEvents(mergedEvents, (error, value) => {
             if (error) {
                 console.error(error);
-                res.status(500).send('Fehler bei der Kalendererstellung.');
+                res.status(500).send('Error during calendar creation.');
                 return;
             }
 
-            // .ics-Datei bereitstellen
-            res.setHeader('Content-Disposition', 'attachment; filename="Stundenplan.ics"');
+            // Provide .ics file
+            res.setHeader('Content-Disposition', 'attachment; filename="timetable.ics"');
             res.setHeader('Content-Type', 'text/calendar');
             res.send(value);
         });
     } catch (error) {
-        console.error('Fehler beim Abrufen des Stundenplans:', error);
-        res.status(500).send('Fehler beim Abrufen des Stundenplans.');
+        console.error('Error when retrieving the timetable:', error);
+        res.status(500).send('Error when retrieving the timetable.');
     }
 });
 
 app.listen(port, () => {
-    console.log(`Server läuft auf http://localhost:${port}`);
+    console.log(`ICSUntis running on http://localhost:${port}`);
 });
