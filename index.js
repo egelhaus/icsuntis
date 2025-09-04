@@ -35,17 +35,18 @@ app.get('/', async (req, res) => {
                 const month = parseInt(dateStr.slice(4, 6));
                 const day = parseInt(dateStr.slice(6, 8));
 
-                let startHour = Math.floor(lesson.startTime / 100);
+                const startHour = Math.floor(lesson.startTime / 100);
                 const startMinute = lesson.startTime % 100;
-                let endHour = Math.floor(lesson.endTime / 100);
+                const endHour = Math.floor(lesson.endTime / 100);
                 const endMinute = lesson.endTime % 100;
 
-                // ----------------------------------------------------
-                // Add 2 hours to account for the time zone offset
-                // ----------------------------------------------------
-                startHour += 2; 
-                endHour += 2;
-                // ----------------------------------------------------
+                // Create a date object. Note: Month is 0-indexed in JavaScript.
+                const startDate = new Date(year, month - 1, day, startHour, startMinute); 
+                const endDate = new Date(year, month - 1, day, endHour, endMinute);
+                
+                // Add two hours to correct the time zone offset
+                startDate.setHours(startDate.getHours() + 2);
+                endDate.setHours(endDate.getHours() + 2);
 
                 const subjects = lesson.su.map(subject => subject.longname).join(', ');
                 const rooms = lesson.ro ? lesson.ro.map(room => room.name).join(', ') : 'No room specified';
@@ -55,8 +56,8 @@ app.get('/', async (req, res) => {
                 const fullinfo = `Teacher: ${teachers}${inf}`;
 
                 return {
-                    start: [year, month, day, startHour, startMinute],
-                    end: [year, month, day, endHour, endMinute],
+                    start: [startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate(), startDate.getHours(), startDate.getMinutes()],
+                    end: [endDate.getFullYear(), endDate.getMonth() + 1, endDate.getDate(), endDate.getHours(), endDate.getMinutes()],
                     title: subjects || 'Stunde',
                     location: rooms,
                     description: fullinfo,
