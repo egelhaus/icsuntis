@@ -35,10 +35,17 @@ app.get('/', async (req, res) => {
                 const month = parseInt(dateStr.slice(4, 6));
                 const day = parseInt(dateStr.slice(6, 8));
 
-                const startHour = Math.floor(lesson.startTime / 100);
+                let startHour = Math.floor(lesson.startTime / 100);
                 const startMinute = lesson.startTime % 100;
-                const endHour = Math.floor(lesson.endTime / 100);
+                let endHour = Math.floor(lesson.endTime / 100);
                 const endMinute = lesson.endTime % 100;
+
+                // ----------------------------------------------------
+                // Add 2 hours to account for the time zone offset
+                // ----------------------------------------------------
+                startHour += 2; 
+                endHour += 2;
+                // ----------------------------------------------------
 
                 const subjects = lesson.su.map(subject => subject.longname).join(', ');
                 const rooms = lesson.ro ? lesson.ro.map(room => room.name).join(', ') : 'No room specified';
