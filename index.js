@@ -8,7 +8,7 @@ const port = 3979;
 app.get('/', async (req, res) => {
     try {
         const { server, school, username, password } = req.query;
-        
+
         if (!server & !school & !username & !password) {
             return res.redirect('https://github.com/tschuerti/icsuntis');
         }
@@ -40,14 +40,6 @@ app.get('/', async (req, res) => {
                 const endHour = Math.floor(lesson.endTime / 100);
                 const endMinute = lesson.endTime % 100;
 
-                // Create a date object. Note: Month is 0-indexed in JavaScript.
-                const startDate = new Date(year, month - 1, day, startHour, startMinute); 
-                const endDate = new Date(year, month - 1, day, endHour, endMinute);
-                
-                // Add two hours to correct the time zone offset
-                startDate.setHours(startDate.getHours() + 2);
-                endDate.setHours(endDate.getHours() + 2);
-
                 const subjects = lesson.su.map(subject => subject.longname).join(', ');
                 const rooms = lesson.ro ? lesson.ro.map(room => room.name).join(', ') : 'No room specified';
                 const teachers = lesson.te ? lesson.te.map(teacher => teacher.longname).join(', ') : 'No teacher specified';
@@ -56,11 +48,14 @@ app.get('/', async (req, res) => {
                 const fullinfo = `Teacher: ${teachers}${inf}`;
 
                 return {
-                    start: [startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate(), startDate.getHours(), startDate.getMinutes()],
-                    end: [endDate.getFullYear(), endDate.getMonth() + 1, endDate.getDate(), endDate.getHours(), endDate.getMinutes()],
+                    start: [year, month, day, startHour, startMinute],
+                    end: [year, month, day, endHour, endMinute],
                     title: subjects || 'Stunde',
                     location: rooms,
                     description: fullinfo,
+                    // Specify the time zone for the event
+                    startOutputType: 'local',
+                    endOutputType: 'local'
                 };
             });
 
@@ -74,19 +69,23 @@ app.get('/', async (req, res) => {
                 currentEvent.title === nextEvent.title &&
                 currentEvent.location === nextEvent.location &&
                 currentEvent.description === nextEvent.description &&
-                currentEvent.start[0] === nextEvent.start[0] && // Same year
-                currentEvent.start[1] === nextEvent.start[1] && // Same month
-                currentEvent.start[2] === nextEvent.start[2] // Same day
+                currentEvent.start[0] === nextEvent.start[0] &&
+                currentEvent.start[1] === nextEvent.start[1] &&
+                currentEvent.start[2] === nextEvent.start[2]
             ) {
                 mergedEvents.push({
                     ...currentEvent,
                     end: nextEvent.end
                 });
-                i++; // Skip the next event
+                i++;
             } else {
                 mergedEvents.push(currentEvent);
             }
         }
+
+        const options = {
+            timezone: 'Europe/Berlin'
+        };
 
         createEvents(mergedEvents, (error, value) => {
             if (error) {
